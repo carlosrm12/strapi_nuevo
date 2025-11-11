@@ -53,5 +53,6 @@ jobs:
             sudo docker run -d \
               -p 1337:1337 \
               --name strapi-container \
-              -v /home/ec2-user/strapi-data:/app/.tmp \
-              ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
+              -v /home/***/strapi-data:/app/.tmp \
+              ***/hello-strapi:latest \
+              strapi develop
