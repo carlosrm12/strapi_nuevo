@@ -49,10 +49,14 @@ jobs:
             # <-- ARREGLO: Añadir 'sudo'
             sudo docker rm strapi-container || true
 
-            # <-- ARREGLO: Añadir 'sudo' al inicio de todo el comando
+            # (Tu script de deploy en GitHub Actions)
+
+# ... (los comandos de pull, stop, rm) ...
+
+# Fíjate en la última línea que añadimos
             sudo docker run -d \
               -p 1337:1337 \
               --name strapi-container \
               -v /home/***/strapi-data:/app/.tmp \
               ***/hello-strapi:latest \
-              strapi develop
+  strapi develop
