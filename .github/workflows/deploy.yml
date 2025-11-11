@@ -36,33 +36,18 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # 1. Asegura que la carpeta de datos (para subidas) exista
+            # 1. (ARREGLO) Limpia el disco de Docker para liberar espacio
+            sudo docker system prune -a -f
+            
+            # 2. Asegura que la carpeta de 'uploads' exista
             mkdir -p /home/${{ secrets.EC2_USER }}/strapi-uploads
             
-            # 2. Descarga la imagen más nueva de DockerHub
+            # 3. Descarga la imagen más nueva de DockerHub
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
             
-            # 3. Detiene el contenedor antiguo (si está corriendo)
+            # 4. Detiene y elimina el contenedor antiguo
             sudo docker stop strapi-container || true
-            
-            # 4. Elimina el contenedor antiguo (si existe)
             sudo docker rm strapi-container || true
             
-            # 5. Lanza el nuevo contenedor de PRODUCCIÓN con secretos
-            sudo docker run -d \
-              -p 1337:1337 \
-              --name strapi-container \
-              \
-              # --- Variables de entorno REQUERIDAS ---
-              # (Puedes usar estos valores para tu práctica)
-              -e APP_KEYS="dummyKey1,dummyKey2" \
-              -e API_TOKEN_SALT="dummySalt" \
-              -e ADMIN_JWT_SECRET="dummyAdminSecret" \
-              -e JWT_SECRET="dummyJwtSecret" \
-              \
-              # --- ARREGLO DEL VOLUMEN ---
-              # La ruta de Strapi V4 para 'uploads' no es '.tmp'
-              -v /home/${{ secrets.EC2_USER }}/strapi-uploads:/app/public/uploads \
-              \
-              # --- La imagen a correr (sin 'strapi develop') ---
-              ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
+            # 5. (ARREGLO) Lanza el nuevo contenedor (todo en una línea)
+            sudo docker run -d -p 1337:1337 --name strapi-container -e APP_KEYS="dummyKey1,dummyKey2" -e API_TOKEN_SALT="dummySalt" -e ADMIN_JWT_SECRET="dummyAdminSecret" -e JWT_SECRET="dummyJwtSecret" -v /home/${{ secrets.EC2_USER }}/strapi-uploads:/app/public/uploads ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
