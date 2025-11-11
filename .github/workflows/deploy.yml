@@ -14,7 +14,6 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          # <-- ARREGLO: Corregido el error de tipeo (era DOKERHUB)
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -23,7 +22,6 @@ jobs:
         with:
           context: .
           push: true
-          # <-- ARREGLO: Corregido el error de tipeo (era DOKERHUB)
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
 
   deploy:
@@ -38,8 +36,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # 1. Asegura que la carpeta de datos exista
-            mkdir -p /home/${{ secrets.EC2_USER }}/strapi-data
+            # 1. Asegura que la carpeta de datos (para subidas) exista
+            mkdir -p /home/${{ secrets.EC2_USER }}/strapi-uploads
             
             # 2. Descarga la imagen más nueva de DockerHub
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
@@ -50,10 +48,21 @@ jobs:
             # 4. Elimina el contenedor antiguo (si existe)
             sudo docker rm strapi-container || true
             
-            # 5. Lanza el nuevo contenedor forzando el modo DESARROLLO
+            # 5. Lanza el nuevo contenedor de PRODUCCIÓN con secretos
             sudo docker run -d \
               -p 1337:1337 \
               --name strapi-container \
-              -v /home/${{ secrets.EC2_USER }}/strapi-data:/app/.tmp \
-              ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest \
-              strapi develop
+              \
+              # --- Variables de entorno REQUERIDAS ---
+              # (Puedes usar estos valores para tu práctica)
+              -e APP_KEYS="dummyKey1,dummyKey2" \
+              -e API_TOKEN_SALT="dummySalt" \
+              -e ADMIN_JWT_SECRET="dummyAdminSecret" \
+              -e JWT_SECRET="dummyJwtSecret" \
+              \
+              # --- ARREGLO DEL VOLUMEN ---
+              # La ruta de Strapi V4 para 'uploads' no es '.tmp'
+              -v /home/${{ secrets.EC2_USER }}/strapi-uploads:/app/public/uploads \
+              \
+              # --- La imagen a correr (sin 'strapi develop') ---
+              ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
