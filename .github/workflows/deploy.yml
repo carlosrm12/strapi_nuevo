@@ -37,20 +37,21 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # <-- CAMBIO 2: Crear una carpeta en el EC2 para guardar la base de datos
+            # Crear la carpeta sigue igual
             mkdir -p /home/ec2-user/strapi-data
 
-            # <-- CAMBIO 3: Usar el nuevo nombre de imagen
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
+            # <-- ARREGLO: Añadir 'sudo'
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
 
-            # <-- CAMBIO 4: Usar un nuevo nombre de contenedor
-            docker stop strapi-container || true
-            docker rm strapi-container || true
+            # <-- ARREGLO: Añadir 'sudo'
+            sudo docker stop strapi-container || true
 
-            # <-- CAMBIO 5: Comando 'docker run' adaptado para Strapi
-            docker run -d \
+            # <-- ARREGLO: Añadir 'sudo'
+            sudo docker rm strapi-container || true
+
+            # <-- ARREGLO: Añadir 'sudo' al inicio de todo el comando
+            sudo docker run -d \
               -p 1337:1337 \
               --name strapi-container \
-              # <-- CAMBIO 6 (VITAL): Mapear la carpeta de la base de datos a nuestro EC2
               -v /home/ec2-user/strapi-data:/app/.tmp \
               ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
