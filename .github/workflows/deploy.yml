@@ -14,6 +14,7 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
+          # <-- ARREGLO: Corregido el error de tipeo (era DOKERHUB)
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -22,7 +23,7 @@ jobs:
         with:
           context: .
           push: true
-          # <-- CAMBIO 1: Nuevo nombre de imagen
+          # <-- ARREGLO: Corregido el error de tipeo (era DOKERHUB)
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
 
   deploy:
@@ -37,26 +38,22 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Crear la carpeta sigue igual
-            mkdir -p /home/ec2-user/strapi-data
-
-            # <-- ARREGLO: Añadir 'sudo'
+            # 1. Asegura que la carpeta de datos exista
+            mkdir -p /home/${{ secrets.EC2_USER }}/strapi-data
+            
+            # 2. Descarga la imagen más nueva de DockerHub
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest
-
-            # <-- ARREGLO: Añadir 'sudo'
+            
+            # 3. Detiene el contenedor antiguo (si está corriendo)
             sudo docker stop strapi-container || true
-
-            # <-- ARREGLO: Añadir 'sudo'
+            
+            # 4. Elimina el contenedor antiguo (si existe)
             sudo docker rm strapi-container || true
-
-            # (Tu script de deploy en GitHub Actions)
-
-# ... (los comandos de pull, stop, rm) ...
-
-# Fíjate en la última línea que añadimos
+            
+            # 5. Lanza el nuevo contenedor forzando el modo DESARROLLO
             sudo docker run -d \
               -p 1337:1337 \
               --name strapi-container \
-              -v /home/***/strapi-data:/app/.tmp \
-              ***/hello-strapi:latest \
-  strapi develop
+              -v /home/${{ secrets.EC2_USER }}/strapi-data:/app/.tmp \
+              ${{ secrets.DOCKERHUB_USERNAME }}/hello-strapi:latest \
+              strapi develop
